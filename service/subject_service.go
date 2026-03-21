@@ -19,7 +19,7 @@ func NewSubjectService(
 
 func (s *SubjectService) GetSubjectByUserId(userId string) (*models.Subject, error) {
 	user, ok := s.store.GetUser(userId)
-	if ok {
+	if !ok {
 		return nil, ErrInvalidUser
 	}
 

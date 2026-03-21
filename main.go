@@ -10,7 +10,7 @@ import (
 )
 
 func hello(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("hello"))
+	w.Write([]byte("hello"))
 }
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	})
 
 	memStore.SaveUserById(models.User{
-		UserId: "user1",
+		UserId:   "user1",
 		Username: "user1",
 		Password: "123",
 	})
@@ -46,11 +46,11 @@ func main() {
 	metadataHandler := handler.NewMetadataHandler(metadataService)
 
 	// Routes
-	http.Handle("/authorize", handler.Logger(http.HandlerFunc(authorizeHandler.Handle)))
-	http.Handle("/token", handler.Logger(http.HandlerFunc(tokenHandler.Handle)))
-	http.Handle("/tokeninfo", handler.Logger(http.HandlerFunc(tokenInfoHandler.Handle)))
-	http.Handle("/.well-known/oauth-authorization-server", handler.Logger(http.HandlerFunc(metadataHandler.Handle)))
-	http.Handle("/callback", http.HandlerFunc(hello))
+	http.Handle("GET /authorize", handler.Logger(http.HandlerFunc(authorizeHandler.Handle)))
+	http.Handle("POST /token", handler.Logger(http.HandlerFunc(tokenHandler.Handle)))
+	http.Handle("GET /tokeninfo", handler.Logger(http.HandlerFunc(tokenInfoHandler.Handle)))
+	http.Handle("GET /.well-known/oauth-authorization-server", handler.Logger(http.HandlerFunc(metadataHandler.Handle)))
+	http.Handle("GET /callback", http.HandlerFunc(hello))
 
 	// Server
 	http.ListenAndServe(":8080", nil)

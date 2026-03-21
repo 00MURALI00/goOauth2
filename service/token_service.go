@@ -49,7 +49,7 @@ type TokenOutput struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	Code         string `json:"code"`
-	RedirectUri  string `json:"redirect_uri`
+	RedirectUri  string `json:"redirect_uri"`
 	State        string `json:"state"`
 
 	IsOIDC bool     `json:"is_oidc"`
@@ -100,7 +100,7 @@ func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput) (*TokenExcha
 		return nil, err
 	}
 
-	_, accessTokenStr, err := util.SignAccessToken(code.UserId, client.ClientId, time.Hour.String(), code.Scope)
+	_, accessTokenStr, err := util.SignAccessToken(code.UserId, client.ClientId, code.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (ts *TokenService) tokenByRefresh(input TokenInput) (*TokenOutput, error) {
 		return nil, err
 	}
 
-	_, accessTokenStr, err := util.SignAccessToken(claims.Sub, client.ClientId, time.Hour.String(), client.Scopes)
+	_, accessTokenStr, err := util.SignAccessToken(claims.Sub, client.ClientId, client.Scopes)
 	if err != nil {
 		return nil, err
 	}

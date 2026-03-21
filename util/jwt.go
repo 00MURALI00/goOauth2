@@ -10,7 +10,7 @@ import (
 var jwtSecret = []byte("jet_secret")
 var Expiry = 5 * time.Minute
 
-func SignAccessToken(userId, clientId, epxiry string, scope []string) (*models.AccessToken, string, error) {
+func SignAccessToken(userId, clientId string, scope []string) (*models.AccessToken, string, error) {
 	claims := &models.AccessToken{
 		Sub:      userId,
 		ClientId: clientId,
