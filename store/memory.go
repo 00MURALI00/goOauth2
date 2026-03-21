@@ -1,13 +1,21 @@
 package store
 
 import (
-	"github.com/00MURALI00/goOauth2/oauth/models"
+	"github.com/00MURALI00/goOauth2/models"
 )
 
 type MemoryStore struct {
 	Users   map[string]models.User
 	Clients map[string]models.Client
 	Codes   map[string]models.AuthorizationCode
+}
+
+func NewMemoryStore() *MemoryStore {
+	return &MemoryStore{
+		Users:   make(map[string]models.User),
+		Clients: make(map[string]models.Client),
+		Codes:   make(map[string]models.AuthorizationCode),
+	}
 }
 
 // Users methods

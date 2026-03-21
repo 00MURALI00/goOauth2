@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/00MURALI00/goOauth2/oauth/models"
-	"github.com/00MURALI00/goOauth2/oauth/store"
+	"github.com/00MURALI00/goOauth2/models"
+	"github.com/00MURALI00/goOauth2/store"
 	"github.com/00MURALI00/goOauth2/util"
 )
 

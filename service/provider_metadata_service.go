@@ -1,6 +1,6 @@
 package service
 
-import "github.com/00MURALI00/goOauth2/oauth/models"
+import "github.com/00MURALI00/goOauth2/models"
 
 type ProviderMetadataService struct {
 	issuer string

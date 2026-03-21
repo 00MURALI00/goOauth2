@@ -3,7 +3,7 @@ package util
 import (
 	"time"
 
-	"github.com/00MURALI00/goOauth2/oauth/models"
+	"github.com/00MURALI00/goOauth2/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 

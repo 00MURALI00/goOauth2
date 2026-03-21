@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/00MURALI00/goOauth2/oauth/models"
-	"github.com/00MURALI00/goOauth2/oauth/store"
+	"github.com/00MURALI00/goOauth2/models"
+	"github.com/00MURALI00/goOauth2/store"
 	"github.com/00MURALI00/goOauth2/util"
 )
 
@@ -28,7 +28,7 @@ type AuthorizeService struct {
 
 type AuthorizeInput struct {
 	ClientId            string
-	RedirectUrl         string
+	RedirectUri         string
 	Scope               []string
 	UserId              string
 	State               string
@@ -49,7 +49,7 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 	if !ok {
 		return nil, ErrInvalidClient
 	}
-	if client.RedirectUrl != input.RedirectUrl {
+	if client.RedirectUri != input.RedirectUri {
 		return nil, ErrInvalidRedirect
 	}
 
@@ -70,11 +70,6 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 		return nil, err
 	}
 
-	user, ok := as.store.GetUser(input.UserId)
-	if !ok {
-		return nil, ErrInvalidUser
-	}
-
 	code, err := util.GenerateCode(16)
 	if err != nil {
 		return nil, err
@@ -83,17 +78,17 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 	expiry := time.Now().Add(Expiry).Unix()
 
 	params := models.AuthorizationCodeInput{
-		Code:         code,
-		ClientId:     client.ClientId,
-		UserId:       user.UserId,
-		Scope:        input.Scope,
-		RedirectUrl:  client.RedirectUrl,
-		State:        input.State,
-		Nonce:        input.Nonce,
-		ResponseType: input.ResponseType,
-		IsOIDC:       isOIDC,
-		Expiry:       expiry,
-		CodeChallenge: input.CodeChallenge,
+		Code:                code,
+		ClientId:            client.ClientId,
+		UserId:              input.UserId,
+		Scope:               input.Scope,
+		RedirectUri:         client.RedirectUri,
+		State:               input.State,
+		Nonce:               input.Nonce,
+		ResponseType:        input.ResponseType,
+		IsOIDC:              isOIDC,
+		Expiry:              expiry,
+		CodeChallenge:       input.CodeChallenge,
 		CodeChallengeMethod: input.CodeChallengeMethod,
 	}
 
@@ -102,7 +97,7 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 
 	return &TokenOutput{
 		Code:        code,
-		RedirectUrl: input.RedirectUrl,
+		RedirectUri: input.RedirectUri,
 		State:       input.State,
 	}, nil
 }

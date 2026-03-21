@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/00MURALI00/goOauth2/oauth/models"
-	"github.com/00MURALI00/goOauth2/oauth/store"
+	"github.com/00MURALI00/goOauth2/models"
+	"github.com/00MURALI00/goOauth2/store"
 	"github.com/00MURALI00/goOauth2/util"
 )
 
@@ -15,7 +15,7 @@ var (
 	ErrInvalidSecret      = errors.New("invalid secret")
 	ErrInvalidCode        = errors.New("invalid code")
 	ErrCodeExpired        = errors.New("code expired")
-	ErrInvalidRedirectUrl = errors.New("invalid redirect uri")
+	ErrInvalidRedirectUri = errors.New("invalid redirect uri")
 	ErrInvalidGrantType   = errors.New("invalid grant type")
 )
 
@@ -40,21 +40,21 @@ type TokenInput struct {
 	ClientId     string
 	ClientSecret string
 	Code         string
-	RedirectUrl  string
+	RedirectUri  string
 	RefreshToken string
 	CodeVerifier string
 }
 
 type TokenOutput struct {
-	AccessToken  string
-	RefreshToken string
-	Code         string
-	RedirectUrl  string
-	State        string
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	Code         string `json:"code"`
+	RedirectUri  string `json:"redirect_uri`
+	State        string `json:"state"`
 
-	IsOIDC bool
-	Scope  []string
-	Nonce  string
+	IsOIDC bool     `json:"is_oidc"`
+	Scope  []string `json:"scope"`
+	Nonce  string   `json:"nonce"`
 }
 
 type TokenExchangeResult struct {
@@ -215,7 +215,7 @@ func (ts *TokenService) tokenByCode(input TokenInput) (*TokenOutput, error) {
 		AccessToken:  tokenExchangeResult.AccessTokenString,
 		RefreshToken: tokenExchangeResult.RefreshTokenString,
 		Code:         code.Code,
-		RedirectUrl:  client.RedirectUrl,
+		RedirectUri:  client.RedirectUri,
 		State:        code.State,
 
 		IsOIDC: code.IsOIDC,
@@ -274,8 +274,8 @@ func (ts *TokenService) getCodeAndValidate(input TokenInput) (models.Authorizati
 		return models.AuthorizationCode{}, ErrCodeExpired
 	}
 
-	if code.RedirectUrl != input.RedirectUrl {
-		return models.AuthorizationCode{}, ErrInvalidRedirectUrl
+	if code.RedirectUri != input.RedirectUri {
+		return models.AuthorizationCode{}, ErrInvalidRedirectUri
 	}
 
 	return code, nil

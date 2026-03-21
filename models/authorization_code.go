@@ -7,7 +7,7 @@ type AuthorizationCode struct {
 	ClientId            string   `json:"client_id"`
 	UserId              string   `json:"user_id"`
 	Scope               []string `json:"scopes"`
-	RedirectUrl         string   `json:"redirect_url"`
+	RedirectUri         string   `json:"redirect_uri"`
 	State               string   `json:"state"`
 	Nonce               string   `json:"nonce"`
 	ResponseType        string   `json:"reponse_type"`
@@ -23,7 +23,7 @@ type AuthorizationCodeInput struct {
 	ClientId            string
 	UserId              string
 	Scope               []string
-	RedirectUrl         string
+	RedirectUri         string
 	State               string
 	Nonce               string
 	ResponseType        string
@@ -41,7 +41,7 @@ func NewAuthorizationCode(input AuthorizationCodeInput) AuthorizationCode {
 		ClientId:            input.ClientId,
 		UserId:              input.UserId,
 		Scope:               input.Scope,
-		RedirectUrl:         input.RedirectUrl,
+		RedirectUri:         input.RedirectUri,
 		State:               input.State,
 		Nonce:               input.Nonce,
 		ResponseType:        input.ResponseType,
