@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -89,17 +90,7 @@ func (ts *TokenService) Token(input TokenInput) (*TokenOutput, error) {
 	}
 }
 
-func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput) (*TokenExchangeResult, error) {
-	client, err := ts.getClientAndValidate(input)
-	if err != nil {
-		return nil, err
-	}
-
-	code, err := ts.getCodeAndValidate(input)
-	if err != nil {
-		return nil, err
-	}
-
+func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput, client models.Client, code models.AuthorizationCode) (*TokenExchangeResult, error) {
 	_, accessTokenStr, err := util.SignAccessToken(code.UserId, client.ClientId, code.Scope)
 	if err != nil {
 		return nil, err
@@ -206,7 +197,7 @@ func (ts *TokenService) tokenByCode(input TokenInput) (*TokenOutput, error) {
 		return nil, err
 	}
 
-	tokenExchangeResult, err := ts.ExchangeAuthorizationCode(input)
+	tokenExchangeResult, err := ts.ExchangeAuthorizationCode(input, client, code)
 	if err != nil {
 		return nil, err
 	}
@@ -281,22 +272,21 @@ func (ts *TokenService) getCodeAndValidate(input TokenInput) (models.Authorizati
 	return code, nil
 }
 
-func (ts *TokenService) validatePKCE(verifier string, challenge string, method string) error {
+func (ts *TokenService) validatePKCE(verifier, challenge, method string) error {
 	if challenge == "" {
-		return nil
+		return ErrInvalidPKCE
 	}
 
-	if method == "plain" && verifier == challenge {
-		return nil
+	if method != "S256" {
+		return ErrInvalidPKCE
 	}
 
-	if method == "S256" {
-		h := sha256.Sum256([]byte(verifier))
-		encoded := base64.RawURLEncoding.EncodeToString(h[:])
-		if encoded == challenge {
-			return nil
-		}
+	hash := sha256.Sum256([]byte(verifier))
+	expected := base64.RawURLEncoding.EncodeToString(hash[:])
+
+	if subtle.ConstantTimeCompare([]byte(expected), []byte(challenge)) != 1 {
+		return ErrInvalidPKCE
 	}
 
-	return ErrInvalidPKCE
+	return nil
 }

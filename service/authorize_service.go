@@ -105,19 +105,11 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 // Private Methods
 
 func (as *AuthorizeService) validatePKCE(challenge, method string) error {
-	if challenge == "" && method == "" {
+	if challenge != "" && method == "S256" {
 		return nil
 	}
 
-	if challenge == "" || method == "" {
-		return ErrInvalidPKCE
-	}
-
-	if challenge == "plain" || method == "S256" {
-		return ErrUnsupportedPKCE
-	}
-
-	return nil
+	return ErrUnsupportedPKCE
 }
 
 func (as *AuthorizeService) validateNonce(IsOIDC bool, nonce string) error {

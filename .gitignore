@@ -23,7 +23,8 @@ profile.cov
 # Go workspace file
 go.work
 go.work.sum
-
+private.pem
+public.pem
 # env file
 .env
 
