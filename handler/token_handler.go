@@ -53,5 +53,8 @@ func (h *TokenHandler) Handle(
 	}
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(output)
+	if err := json.NewEncoder(w).Encode(output); err != nil {
+    http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+    return
+}
 }

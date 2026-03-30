@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/00MURALI00/goOauth2/handler"
+	"github.com/00MURALI00/goOauth2/middleware"
 	"github.com/00MURALI00/goOauth2/models"
 	"github.com/00MURALI00/goOauth2/service"
 	"github.com/00MURALI00/goOauth2/store"
@@ -38,19 +39,22 @@ func main() {
 	tokenService := service.NewTokenService(memStore, subjectService, claimsService)
 	tokenInfoService := service.NewTokenInfoService(subjectService, claimsService)
 	metadataService := service.NewProviderMetadataService(issuer)
+	signupService := service.NewSignupService(memStore)
 
 	// Handlers
 	authorizeHandler := handler.NewAuthorizeHandler(authorizeService, loginService)
 	tokenHandler := handler.NewTokenHandler(tokenService)
 	tokenInfoHandler := handler.NewTokenInfoHandler(tokenInfoService)
 	metadataHandler := handler.NewMetadataHandler(metadataService)
+	SignupHandler := handler.NewSignupHandler(signupService)
 
 	// Routes
-	http.Handle("GET /authorize", handler.Logger(http.HandlerFunc(authorizeHandler.Handle)))
-	http.Handle("POST /token", handler.Logger(http.HandlerFunc(tokenHandler.Handle)))
-	http.Handle("GET /tokeninfo", handler.Logger(http.HandlerFunc(tokenInfoHandler.Handle)))
-	http.Handle("GET /.well-known/oauth-authorization-server", handler.Logger(http.HandlerFunc(metadataHandler.Handle)))
+	http.Handle("GET /authorize", middleware.Logger(http.HandlerFunc(authorizeHandler.Handle)))
+	http.Handle("POST /token", middleware.Logger(http.HandlerFunc(tokenHandler.Handle)))
+	http.Handle("GET /tokeninfo", middleware.Logger(http.HandlerFunc(tokenInfoHandler.Handle)))
+	http.Handle("GET /.well-known/oauth-authorization-server", middleware.Logger(http.HandlerFunc(metadataHandler.Handle)))
 	http.Handle("GET /callback", http.HandlerFunc(hello))
+	http.Handle("POST /signup", middleware.Logger(http.HandlerFunc(SignupHandler.Handle)))
 
 	// Server
 	http.ListenAndServe(":3000", nil)
