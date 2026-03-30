@@ -5,6 +5,7 @@ import (
 
 	"github.com/00MURALI00/goOauth2/models"
 	"github.com/00MURALI00/goOauth2/store"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginService struct {
@@ -23,7 +24,7 @@ func (ls LoginService) Login(username, password string) (models.User, error) {
 		return models.User{}, fmt.Errorf("User not found")
 	}
 
-	if user.Password != password {
+	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password)); err != nil {
 		return models.User{}, fmt.Errorf("User is not authorized")
 	}
 
