@@ -16,6 +16,7 @@ type AuthorizationCode struct {
 	Expiry              int64    `json:"expiry"`
 	CodeChallenge       string   `json:"code_challange"`
 	CodeChallengeMethod string   `json:"code_challange_method"`
+	AuthTime            int64    `json:"auth_time"`
 }
 
 type AuthorizationCodeInput struct {
@@ -32,6 +33,7 @@ type AuthorizationCodeInput struct {
 	Expiry              int64
 	CodeChallenge       string
 	CodeChallengeMethod string
+	AuthTime            int64
 }
 
 func NewAuthorizationCode(input AuthorizationCodeInput) AuthorizationCode {
@@ -50,5 +52,6 @@ func NewAuthorizationCode(input AuthorizationCodeInput) AuthorizationCode {
 		IssuedAt:            time.Now().Unix(),
 		CodeChallenge:       input.CodeChallenge,
 		CodeChallengeMethod: input.CodeChallengeMethod,
+		AuthTime:            input.AuthTime,
 	}
 }

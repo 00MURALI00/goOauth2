@@ -90,6 +90,7 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 		Expiry:              expiry,
 		CodeChallenge:       input.CodeChallenge,
 		CodeChallengeMethod: input.CodeChallengeMethod,
+		AuthTime:            time.Now().Unix(),
 	}
 
 	ac := models.NewAuthorizationCode(params)

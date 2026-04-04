@@ -15,5 +15,5 @@ type TokenContext struct {
 	Subject *Subject `json:"sub"`
 	Claims  *Claims  `json:"claims"`
 
-	IDTokenPayload *IDTokenPayload
+	IdToken *IdToken
 }

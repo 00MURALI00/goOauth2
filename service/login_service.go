@@ -1,11 +1,17 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/00MURALI00/goOauth2/models"
 	"github.com/00MURALI00/goOauth2/store"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	ErrUserNotFound     = errors.New("User not found")
+	ErrUserUnAuthorized = errors.New("User is not authorized")
 )
 
 type LoginService struct {
@@ -21,12 +27,12 @@ func NewLoginService(store *store.MemoryStore) *LoginService {
 func (ls LoginService) Login(username, password string) (models.User, error) {
 	user, ok := ls.store.GetUserByUsername(username)
 	if !ok {
-		return models.User{}, fmt.Errorf("User not found")
+		return models.User{}, ErrUserNotFound
 	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password)); err != nil {
-		return models.User{}, fmt.Errorf("User is not authorized")
+	fmt.Printf("DEBUG: Comparing incoming '%s' against stored hash '%s'\n", password, user.Password)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return models.User{}, ErrUserUnAuthorized
 	}
-
+	fmt.Println("Hey pindram pa...!")
 	return user, nil
 }

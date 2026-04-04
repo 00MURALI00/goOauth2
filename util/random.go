@@ -14,7 +14,7 @@ var (
 	ErrCodeGeneration = errors.New("Random generation failed")
 )
 
-var pepper = loadPepper()
+var Pepper = loadPepper()
 
 const SALT_SIZE = 5
 const ID_SIZE = 16
@@ -50,24 +50,12 @@ func GenerateId() string {
 	return hex.EncodeToString(b)
 }
 
-func SaltAndHashPassword(password string) (string, string) {
-	salt := generateSalt()
-	spp := fmt.Sprintf("%s%s%s", salt, password, pepper)
-	byteSsp, err := bcrypt.GenerateFromPassword([]byte(spp), bcrypt.MinCost)
-	if err != nil {
-		return "", ""
-	}
-
-	return string(byteSsp), salt
-}
-
-func generateSalt() string {
-	b := make([]byte, SALT_SIZE)
-
-	_, err := rand.Read(b)
+func HashPassword(password string) string {
+	fmt.Printf("Password with Pepper: '%s'\n", password)
+	bytePass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return ""
 	}
 
-	return hex.EncodeToString(b)
+	return string(bytePass)
 }

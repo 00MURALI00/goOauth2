@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/00MURALI00/goOauth2/service"
@@ -45,7 +46,7 @@ func (h *TokenHandler) Handle(
 
 		RefreshToken: r.Form.Get("refresh_token"),
 	}
-
+	fmt.Println("GRant Type: ", r.Form.Get("grant_type"))
 	output, err := h.tokenService.Token(input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

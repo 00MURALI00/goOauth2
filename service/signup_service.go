@@ -36,9 +36,9 @@ func (s *SignupService) SignupUser(user *models.User) error {
 	if user.UserId == "" {
 		return ErrUserIdGenerationFailed
 	}
-	user.Password, user.Salt = util.SaltAndHashPassword(user.Password)
+	user.Password = util.HashPassword(user.Password)
 	fmt.Printf("User Password: %s \n", user.Password)
-	if user.Password == "" || user.Salt == "" {
+	if user.Password == "" {
 		return ErrPasswordHashing
 	}
 

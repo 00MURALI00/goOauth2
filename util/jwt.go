@@ -9,9 +9,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var ExpiryAccessToken = 5 * time.Minute
+var ExpiryAccessAndIDToken = 5 * time.Minute
 var privateKey *rsa.PrivateKey
 var publicKey *rsa.PublicKey
+
+func init() {
+	LoadPrivateKey()
+	LoadPublicKey()
+}
 
 func LoadPublicKey() error {
 	keyData, err := os.ReadFile("public.pem")
@@ -39,7 +44,7 @@ func SignAccessToken(userId, clientId string, scope []string) (*models.AccessTok
 		ClientId: clientId,
 		Scopes:   scope,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ExpiryAccessToken)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ExpiryAccessAndIDToken)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
@@ -66,13 +71,54 @@ func SignRefreshToken(userId, clientId string, scope []string, expiry time.Durat
 	return claims, tokenStr, err
 }
 
+func SignIdToken(sub, aud, iss, nonce string, claims *models.Claims) (*models.IdToken, string, error) {
+	IdToken := &models.IdToken{
+		Sub:      sub,
+		Aud:      aud,
+		Iss:      iss,
+		Nonce:    nonce,
+		AuthTime: time.Now().Unix(),
+
+		Claims: claims,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ExpiryAccessAndIDToken)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, IdToken)
+	tokenStr, err := token.SignedString(privateKey)
+
+	return IdToken, tokenStr, err
+}
+
+func ParseIdtoken(tokenStr string) (*models.IdToken, error) {
+	idToken := &models.IdToken{}
+	token, err := jwt.ParseWithClaims(tokenStr, idToken,
+		func(t *jwt.Token) (any, error) {
+			return publicKey, nil
+		},
+	)
+
+	if err != nil {
+		return &models.IdToken{}, err
+	}
+
+	if !token.Valid {
+		return &models.IdToken{}, jwt.ErrTokenInvalidClaims
+	}
+
+	return idToken, nil
+}
+
 func ParseAccessToken(tokenStr string) (*models.AccessToken, error) {
 	claims := &models.AccessToken{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims,
 		func(t *jwt.Token) (any, error) {
 			return publicKey, nil
-		})
+		},
+	)
 
 	if err != nil {
 		return &models.AccessToken{}, err

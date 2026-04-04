@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/00MURALI00/goOauth2/models"
@@ -49,6 +50,7 @@ type TokenInput struct {
 type TokenOutput struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	IdToken      string `json:"id_token"`
 	Code         string `json:"code"`
 	RedirectUri  string `json:"redirect_uri"`
 	State        string `json:"state"`
@@ -61,25 +63,27 @@ type TokenOutput struct {
 type TokenExchangeResult struct {
 	RefreshToken *models.RefreshToken
 	AccessToken  *models.AccessToken
+	IdToken      *models.IdToken
 
 	AccessTokenString  string
 	RefreshTokenString string
+	IdTokenString      string
 	IsOIDC             bool
 	Nonce              string
 	Scope              []string
 	UserId             string
 	ClientId           string
 
-	User           *models.User
-	Subject        *models.Subject
-	Claims         *models.Claims
-	IdTokenPayload *models.IDTokenPayload
+	User    *models.User
+	Subject *models.Subject
+	Claims  *models.Claims
 
 	AuthTime int64
 	Issuer   string
 }
 
 func (ts *TokenService) Token(input TokenInput) (*TokenOutput, error) {
+	fmt.Printf("GRant type: %s\n", input.GrantType)
 	switch input.GrantType {
 	case "authorization_code":
 		return ts.tokenByCode(input)
@@ -111,6 +115,13 @@ func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput, client model
 		return nil, err
 	}
 
+	_, idTokenStr, err := util.SignIdToken(code.UserId, code.ClientId, issuer, code.Nonce, claim)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("idTokenStr ", idTokenStr)
+
 	if err := ts.validatePKCE(input.CodeVerifier, code.CodeChallenge, code.CodeChallengeMethod); err != nil {
 		return nil, err
 	}
@@ -125,6 +136,7 @@ func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput, client model
 	return &TokenExchangeResult{
 		AccessTokenString:  accessTokenStr,
 		RefreshTokenString: refreshTokenStr,
+		IdTokenString:      idTokenStr,
 
 		Scope:  ctx.Scope,
 		Nonce:  ctx.Nonce,
@@ -139,7 +151,7 @@ func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput, client model
 		AuthTime: ctx.AuthTime,
 		Issuer:   ctx.Issuer,
 
-		IdTokenPayload: ctx.IDTokenPayload,
+		IdToken: ctx.IdToken,
 	}, nil
 }
 
@@ -171,7 +183,7 @@ func (s *TokenService) buildTokenContext(
 
 		now := time.Now()
 
-		ctx.IDTokenPayload = &models.IDTokenPayload{
+		ctx.IdToken = &models.IdToken{
 			Sub:      subject.Sub,
 			Aud:      code.ClientId,
 			Iss:      issuer,
@@ -205,13 +217,14 @@ func (ts *TokenService) tokenByCode(input TokenInput) (*TokenOutput, error) {
 	return &TokenOutput{
 		AccessToken:  tokenExchangeResult.AccessTokenString,
 		RefreshToken: tokenExchangeResult.RefreshTokenString,
+		IdToken: tokenExchangeResult.IdTokenString,
 		Code:         code.Code,
 		RedirectUri:  client.RedirectUri,
 		State:        code.State,
 
-		IsOIDC: code.IsOIDC,
-		Nonce:  code.Nonce,
-		Scope:  code.Scope,
+		IsOIDC:  code.IsOIDC,
+		Nonce:   code.Nonce,
+		Scope:   code.Scope,
 	}, nil
 }
 
@@ -273,6 +286,7 @@ func (ts *TokenService) getCodeAndValidate(input TokenInput) (models.Authorizati
 }
 
 func (ts *TokenService) validatePKCE(verifier, challenge, method string) error {
+	fmt.Println(verifier, challenge, method)
 	if challenge == "" {
 		return ErrInvalidPKCE
 	}

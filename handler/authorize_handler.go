@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -19,27 +20,41 @@ func NewAuthorizeHandler(authorizeServive *service.AuthorizeService, loginServic
 	}
 }
 
-func (a *AuthorizeHandler) Handle(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	userId := q.Get("user_id")
-	password := q.Get("password")
+type Request struct {
+	Username            string `json:"username"`
+	Password            string `json:"password"`
+	ClientId            string `json:"client_id"`
+	RedirectUri         string `json:"redirect_uri"`
+	ResponseType        string `json:"response_type"`
+	Scope               string `json:"scope"`
+	State               string `json:"state"`
+	Nonce               string `json:"nonce"`
+	CodeChallenge       string `json:"code_challenge"`
+	CodeChallengeMethod string `json:"code_challenge_method"`
+}
 
-	user, err := a.loginService.Login(userId, password)
+func (a *AuthorizeHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	req := Request{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Error Decoding the Payload", 401)
+		return
+	}
+
+	user, err := a.loginService.Login(req.Username, req.Password)
 	if err != nil {
 		http.Error(w, err.Error(), 401)
 		return
 	}
 	input := service.AuthorizeInput{
-		ClientId:     q.Get("client_id"),
-		RedirectUri:  q.Get("redirect_uri"),
-		ResponseType: q.Get("response_type"),
-		Scope:        strings.Split(q.Get("scope"), " "),
-		State:        q.Get("state"),
-		Nonce:        q.Get("nonce"),
-		UserId:       user.UserId,
-
-		CodeChallenge:       q.Get("code_challenge"),
-		CodeChallengeMethod: q.Get("code_challenge_method"),
+		ClientId:            req.ClientId,
+		RedirectUri:         req.RedirectUri,
+		ResponseType:        req.ResponseType,
+		Scope:               strings.Split(req.Scope, " "),
+		State:               req.State,
+		Nonce:               req.Nonce,
+		CodeChallenge:       req.CodeChallenge,
+		CodeChallengeMethod: req.CodeChallengeMethod,
+		UserId:              user.UserId,
 	}
 
 	code, err := a.authorizeServer.Authorize(input)

@@ -11,7 +11,7 @@ type MetadataHandler struct {
 	metadataService *service.ProviderMetadataService
 }
 
-func NewMetadataHandler(
+func NewOauthMetadataHandler(
 	metadataService *service.ProviderMetadataService,
 ) *MetadataHandler {
 
@@ -24,13 +24,21 @@ func (h *MetadataHandler) Handle(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-
-	meta := h.metadataService.GetMetadata()
+	var meta any
+	switch r.URL.Path {
+	case "/jwks.json":
+		meta = h.metadataService.GetJwksJsonMetaData()
+	case "/.well-known/openid-configuration":
+		meta = h.metadataService.GetOpenIdConfigMetadata()
+	default:
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(meta); err != nil {
-    http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-    return
-}
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
