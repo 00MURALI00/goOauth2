@@ -75,6 +75,11 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 		return nil, err
 	}
 
+	session, err := as.createSession(input.UserId, client.ClientId)
+	if err != nil {
+		return nil, err
+	}
+
 	expiry := time.Now().Add(Expiry).Unix()
 
 	params := models.AuthorizationCodeInput{
@@ -91,6 +96,7 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 		CodeChallenge:       input.CodeChallenge,
 		CodeChallengeMethod: input.CodeChallengeMethod,
 		AuthTime:            time.Now().Unix(),
+		SId:                 session.ID,
 	}
 
 	ac := models.NewAuthorizationCode(params)
@@ -104,6 +110,20 @@ func (as *AuthorizeService) Authorize(input AuthorizeInput) (*TokenOutput, error
 }
 
 // Private Methods
+
+func (as *AuthorizeService) createSession(userId, clientId string) (*models.Session, error) {
+	id, err := util.NewUuid()
+	if err != nil {
+		return nil, err
+	}
+
+	month := (time.Hour * 24) * 15
+	createdAt, revoked := time.Now().Add(month).Unix(), false
+	session := models.NewSession(id, userId, clientId, createdAt, revoked)
+	as.store.SaveSession(*session)
+
+	return session, err
+}
 
 func (as *AuthorizeService) validatePKCE(challenge, method string) error {
 	if challenge != "" && method == "S256" {

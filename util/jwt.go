@@ -38,11 +38,17 @@ func LoadPrivateKey() error {
 	return err
 }
 
-func SignAccessToken(userId, clientId string, scope []string) (*models.AccessToken, string, error) {
+func SignAccessToken(userId, clientId, sid string, scope []string) (*models.AccessToken, string, error) {
+	id, err := NewUuid()
+	if err != nil {
+		return nil, "", err
+	}
 	claims := &models.AccessToken{
+		ID:       id,
 		Sub:      userId,
 		ClientId: clientId,
 		Scopes:   scope,
+		SId:      sid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ExpiryAccessAndIDToken)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -54,11 +60,17 @@ func SignAccessToken(userId, clientId string, scope []string) (*models.AccessTok
 	return claims, tokenStr, err
 }
 
-func SignRefreshToken(userId, clientId string, scope []string, expiry time.Duration) (*models.RefreshToken, string, error) {
+func SignRefreshToken(userId, clientId, sid string, scope []string, expiry time.Duration) (*models.RefreshToken, string, error) {
+	id, err := NewUuid()
+	if err != nil {
+		return nil, "", err
+	}
 	claims := &models.RefreshToken{
+		ID:       id,
 		Sub:      userId,
 		ClientId: clientId,
 		Scope:    scope,
+		SId:      sid,
 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),

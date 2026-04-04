@@ -33,6 +33,6 @@ func (ls LoginService) Login(username, password string) (models.User, error) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return models.User{}, ErrUserUnAuthorized
 	}
-	fmt.Println("Hey pindram pa...!")
+
 	return user, nil
 }

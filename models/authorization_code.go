@@ -17,6 +17,7 @@ type AuthorizationCode struct {
 	CodeChallenge       string   `json:"code_challange"`
 	CodeChallengeMethod string   `json:"code_challange_method"`
 	AuthTime            int64    `json:"auth_time"`
+	SId                 string   `json:"sid"`
 }
 
 type AuthorizationCodeInput struct {
@@ -34,6 +35,7 @@ type AuthorizationCodeInput struct {
 	CodeChallenge       string
 	CodeChallengeMethod string
 	AuthTime            int64
+	SId                 string
 }
 
 func NewAuthorizationCode(input AuthorizationCodeInput) AuthorizationCode {
@@ -53,5 +55,6 @@ func NewAuthorizationCode(input AuthorizationCodeInput) AuthorizationCode {
 		CodeChallenge:       input.CodeChallenge,
 		CodeChallengeMethod: input.CodeChallengeMethod,
 		AuthTime:            input.AuthTime,
+		SId:                 input.SId,
 	}
 }

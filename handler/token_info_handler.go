@@ -25,9 +25,7 @@ func (h *TokenInfoHandler) Handle(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-
 	auth := r.Header.Get("Authorization")
-
 	if auth == "" {
 		http.Error(w, "missing authorization", http.StatusBadRequest)
 		return

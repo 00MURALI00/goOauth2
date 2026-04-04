@@ -7,18 +7,24 @@ import (
 )
 
 type MemoryStore struct {
-	Users   map[string]models.User
-	Clients map[string]models.Client
-	Codes   map[string]models.AuthorizationCode
-	Ids     map[string]models.IdToken
+	Users        map[string]models.User
+	Clients      map[string]models.Client
+	Codes        map[string]models.AuthorizationCode
+	Ids          map[string]models.IdToken
+	Sessions     map[string]models.Session
+	AccessToken map[string]models.AccessToken
+	RefreshToken map[string]models.RefreshToken
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		Users:   make(map[string]models.User),
-		Clients: make(map[string]models.Client),
-		Codes:   make(map[string]models.AuthorizationCode),
-		Ids:     make(map[string]models.IdToken),
+		Users:        make(map[string]models.User),
+		Clients:      make(map[string]models.Client),
+		Codes:        make(map[string]models.AuthorizationCode),
+		Ids:          make(map[string]models.IdToken),
+		Sessions:     make(map[string]models.Session),
+		AccessToken: make(map[string]models.AccessToken),
+		RefreshToken: make(map[string]models.RefreshToken),
 	}
 }
 
@@ -88,7 +94,7 @@ func (ms *MemoryStore) DeleteCode(code string) {
 
 // Ids methods
 
-func (ms *MemoryStore) GetIdBySub(sub string) (models.IdToken, bool) {
+func (ms *MemoryStore) GetSubject(sub string) (models.IdToken, bool) {
 	id, ok := ms.Ids[sub]
 	return id, ok
 }
@@ -101,4 +107,51 @@ func (ms *MemoryStore) SaveId(id models.IdToken) {
 
 func (ms *MemoryStore) DeleteId(id string) {
 	delete(ms.Ids, id)
+}
+
+// Session Methods
+
+func (ms *MemoryStore) GetSessionById(sid string) (*models.Session, bool) {
+	id, ok := ms.Sessions[sid]
+	return &id, ok
+}
+
+func (ms *MemoryStore) SaveSession(session models.Session) {
+	if session.ID != "" {
+		ms.Sessions[session.ID] = session
+	}
+}
+
+func (ms *MemoryStore) DeleteSession(sid string) {
+	delete(ms.Sessions, sid)
+}
+
+// RefreshToken methods
+
+func (ms *MemoryStore) GetRefreshToken(token string) (models.RefreshToken, bool) {
+	refreshToken, ok := ms.RefreshToken[token]
+	return refreshToken, ok
+}
+
+func (ms *MemoryStore) SaveRefreshToken(token string, refreshToken models.RefreshToken) {
+	ms.RefreshToken[token] = refreshToken
+}
+
+func (ms *MemoryStore) DeleteRefreshtoken(token string) {
+	delete(ms.RefreshToken, token)
+}
+
+// AccessToken methods
+
+func (ms *MemoryStore) GetAccessToken(token string) (models.AccessToken, bool) {
+	accessToken, ok := ms.AccessToken[token]
+	return accessToken, ok
+}
+
+func (ms *MemoryStore) SaveAccessToken(token string, accessToken models.AccessToken) {
+	ms.AccessToken[token] = accessToken
+}
+
+func (ms *MemoryStore) DeleteAccessToken(token string) {
+	delete(ms.AccessToken, token)
 }

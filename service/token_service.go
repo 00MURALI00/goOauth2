@@ -19,6 +19,7 @@ var (
 	ErrCodeExpired        = errors.New("code expired")
 	ErrInvalidRedirectUri = errors.New("invalid redirect uri")
 	ErrInvalidGrantType   = errors.New("invalid grant type")
+	ErrInvalidSessionID   = errors.New("invalid session id")
 )
 
 const issuer = "http://localhost:8080"
@@ -95,15 +96,31 @@ func (ts *TokenService) Token(input TokenInput) (*TokenOutput, error) {
 }
 
 func (ts *TokenService) ExchangeAuthorizationCode(input TokenInput, client models.Client, code models.AuthorizationCode) (*TokenExchangeResult, error) {
-	_, accessTokenStr, err := util.SignAccessToken(code.UserId, client.ClientId, code.Scope)
-	if err != nil {
-		return nil, err
+	code, ok := ts.store.GetCode(input.Code)
+	if !ok {
+		return nil, ErrInvalidCode
 	}
 
-	_, refreshTokenStr, err := util.SignRefreshToken(code.UserId, code.ClientId, code.Scope, 24*time.Hour)
+	session, ok := ts.store.GetSessionById(code.SId)
+	if !ok {
+		return nil, ErrInvalidSessionID
+	}
+
+	if session.Revoked {
+    return nil, ErrUserUnAuthorized
+}
+
+	accessToken, accessTokenStr, err := util.SignAccessToken(code.UserId, client.ClientId, session.ID, code.Scope)
 	if err != nil {
 		return nil, err
 	}
+	ts.store.SaveAccessToken(accessTokenStr, *accessToken)
+
+	refreshToken, refreshTokenStr, err := util.SignRefreshToken(code.UserId, code.ClientId, session.ID, code.Scope, 24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	ts.store.SaveRefreshToken(refreshTokenStr, *refreshToken)
 
 	subject, err := ts.subjectService.GetSubjectByUserId(code.UserId)
 	if err != nil {
@@ -217,14 +234,14 @@ func (ts *TokenService) tokenByCode(input TokenInput) (*TokenOutput, error) {
 	return &TokenOutput{
 		AccessToken:  tokenExchangeResult.AccessTokenString,
 		RefreshToken: tokenExchangeResult.RefreshTokenString,
-		IdToken: tokenExchangeResult.IdTokenString,
+		IdToken:      tokenExchangeResult.IdTokenString,
 		Code:         code.Code,
 		RedirectUri:  client.RedirectUri,
 		State:        code.State,
 
-		IsOIDC:  code.IsOIDC,
-		Nonce:   code.Nonce,
-		Scope:   code.Scope,
+		IsOIDC: code.IsOIDC,
+		Nonce:  code.Nonce,
+		Scope:  code.Scope,
 	}, nil
 }
 
@@ -239,16 +256,27 @@ func (ts *TokenService) tokenByRefresh(input TokenInput) (*TokenOutput, error) {
 		return nil, err
 	}
 
-	_, accessTokenStr, err := util.SignAccessToken(claims.Sub, client.ClientId, client.Scopes)
-	if err != nil {
+	oldRefreshToken, ok := ts.store.GetRefreshToken(input.RefreshToken)
+	if !ok  {
 		return nil, err
 	}
 
-	_, refreshTokenStr, err := util.SignRefreshToken(claims.Sub, claims.ClientId, claims.Scope, 24*time.Hour)
-	if err != nil {
+	session, ok := ts.store.GetSessionById(oldRefreshToken.SId)
+	if !ok {
 		return nil, err
 	}
 
+	accessToken, accessTokenStr, err := util.SignAccessToken(claims.Sub, client.ClientId, session.ID, client.Scopes)
+	if err != nil {
+		return nil, err
+	}
+	ts.store.SaveAccessToken(accessTokenStr, *accessToken)
+
+	refreshToken, refreshTokenStr, err := util.SignRefreshToken(claims.Sub, claims.ClientId, session.ID, claims.Scope, 24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	ts.store.SaveRefreshToken(refreshTokenStr, *refreshToken)
 	return &TokenOutput{
 		AccessToken:  accessTokenStr,
 		RefreshToken: refreshTokenStr,
